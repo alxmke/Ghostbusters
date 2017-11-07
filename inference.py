@@ -304,13 +304,11 @@ class ExactInference(InferenceModule):
         "*** YOUR CODE HERE ***"
         jail_position = self.getJailPosition()
         pacman_position = gameState.getPacmanPosition()
-        #self.getObservationProb(noisyDistance, pacmanPosition, ghostPosition, jailPosition):
-        #self.getObservationProb(pac-position, potential ghost position, jail position)
-        #getObservationProb(self, noisyDistance, pacmanPosition, ghostPosition, jailPosition):
-        # = Pr(observation|pac-position,potential ghost position, jail position)
+        beliefs = self.beliefs
+
         for potential_position in self.allPositions:
-            self.beliefs[potential_position] *= self.getObservationProb(observation, pacman_position, potential_position, jail_position)
-        self.beliefs.normalize()
+            beliefs[potential_position] *= self.getObservationProb(observation, pacman_position, potential_position, jail_position)
+        beliefs.normalize()
 
     def elapseTime(self, gameState):
         """
@@ -322,6 +320,13 @@ class ExactInference(InferenceModule):
         current position is known.
         """
         "*** YOUR CODE HERE ***"
+        old_beliefs = self.beliefs
+        
+        new_beliefs = DiscreteDistribution()
+        for old_pos in self.allPositions:
+            for new_pos, p in self.getPositionDistribution(gameState, old_pos).items():
+               new_beliefs[new_pos] += old_beliefs[old_pos]*p
+        self.beliefs = new_beliefs
 
     def getBeliefDistribution(self):
         return self.beliefs
