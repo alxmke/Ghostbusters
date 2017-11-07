@@ -353,7 +353,6 @@ class ParticleFilter(InferenceModule):
         """
         self.particles = []
         "*** YOUR CODE HERE ***"
-        particles = self.particles
         n_particles = self.numParticles
         positions = self.legalPositions
         n_positions = len(positions)
@@ -438,7 +437,10 @@ class JointParticleFilter(ParticleFilter):
         """
         self.particles = []
         "*** YOUR CODE HERE ***"
-
+        positions = list(itertools.product(self.legalPositions, repeat=self.numGhosts))
+        n_positions = len(positions)
+        random.shuffle(positions)
+        self.particles = [positions[i%n_positions] for i in range(self.numParticles)]
     def addGhostAgent(self, agent):
         """
         Each ghost agent is registered separately and stored (in case they are
