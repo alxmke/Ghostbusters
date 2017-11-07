@@ -26,6 +26,7 @@ class DiscreteDistribution(dict):
     over a finite set of discrete keys.
     """
     def __getitem__(self, key):
+        #this could just be: return self.setdefault(key, 0)
         self.setdefault(key, 0)
         return dict.__getitem__(self, key)
 
@@ -114,7 +115,7 @@ class DiscreteDistribution(dict):
 
         r = upper*random.random()
         for key,value in self.items():
-            current_interval = sampling_intervals[key]
+            current_interval = sampling_intervals.setdefault(key, (0,0))
             if r >= current_interval[0] and r < current_interval[1]:
                 return key
 
@@ -357,9 +358,7 @@ class ParticleFilter(InferenceModule):
         n_particles = self.numParticles
         positions = self.legalPositions
         n_positions = len(positions)
-
-        for i in range(n_particles):
-            particles.append(positions[i%n_positions])
+        self.particles = [positions[i%n_positions] for i in range(n_particles)]
 
 
     def observeUpdate(self, observation, gameState):
@@ -375,6 +374,32 @@ class ParticleFilter(InferenceModule):
         the DiscreteDistribution may be useful.
         """
         "*** YOUR CODE HERE ***"
+        '''
+        Next, we will implement the observeUpdate method in the ParticleFilter class in inference.py.
+        This method constructs a weight distribution over self.particles where the weight of a particle
+        is the probability of the observation given Pacman's position and that particle location. Then,
+        we resample from this weighted distribution to construct our new list of particles.
+
+        You should again use the function self.getObservationProb to find the probability of an observation
+        given Pacman's position, a potential ghost position, and the jail position. The sample method of
+        the DiscreteDistribution class will also be useful. As a reminder, you can obtain Pacman's position
+        using gameState.getPacmanPosition(), and the jail position using self.getJailPosition().
+
+        There is one special case that a correct implementation must handle. When all particles receive zero
+        weight, the list of particles should be reinitialized by calling initializeUniformly. The total
+        method of the DiscreteDistribution may be useful.
+        '''
+        jail_position = self.getJailPosition()
+        pacman_position = gameState.getPacmanPosition()
+
+        updated_beliefs = DiscreteDistribution()
+        for particle in self.particles:
+            updated_beliefs[particle] += self.getObservationProb(observation, pacman_position, particle, jail_position)
+        updated_beliefs.normalize()
+
+
+        if updated_beliefs.total() == 0: return self.initializeUniformly(gameState)
+        self.particles = [updated_beliefs.sample() for _ in range(self.numParticles)]
 
     def elapseTime(self, gameState):
         """
