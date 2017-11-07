@@ -321,7 +321,7 @@ class ExactInference(InferenceModule):
         """
         "*** YOUR CODE HERE ***"
         old_beliefs = self.beliefs
-        
+
         new_beliefs = DiscreteDistribution()
         for old_pos in self.allPositions:
             for new_pos, p in self.getPositionDistribution(gameState, old_pos).items():
@@ -353,6 +353,14 @@ class ParticleFilter(InferenceModule):
         """
         self.particles = []
         "*** YOUR CODE HERE ***"
+        particles = self.particles
+        n_particles = self.numParticles
+        positions = self.legalPositions
+        n_positions = len(positions)
+
+        for i in range(n_particles):
+            particles.append(positions[i%n_positions])
+
 
     def observeUpdate(self, observation, gameState):
         """
@@ -382,6 +390,11 @@ class ParticleFilter(InferenceModule):
         essentially converts a list of particles into a belief distribution.
         """
         "*** YOUR CODE HERE ***"
+        beliefs = DiscreteDistribution()
+        for particle in self.particles:
+            beliefs[particle] += 1
+        beliefs.normalize()
+        return beliefs
 
 
 class JointParticleFilter(ParticleFilter):
